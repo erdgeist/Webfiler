@@ -29,7 +29,8 @@ app.config['DROPZONE_DEFAULT_MESSAGE'] = 'Ziehe die Dateien hier hin, um sie hoc
 
 dropzone = Dropzone(app)
 
-basedir = 'Daten'
+basedir = os.getenv('FILER_BASEDIR', './Daten')
+filettl = int(os.getenv('FILER_FILETTL', 10))
 
 #### ADMIN FACING DIRECTORY LISTS ####
 ####
@@ -151,7 +152,7 @@ def make_tree(rel, path):
             if os.path.isdir(os.path.join(rel,fn)):
                 tree['children'].append(make_tree(rel, fn))
             else:
-                ttl = 10 -  int((time.time() - os.path.getmtime(os.path.join(rel,fn))) / (24*3600))
+                ttl = filettl -  int((time.time() - os.path.getmtime(os.path.join(rel,fn))) / (24*3600))
                 tree['children'].append(dict(name=fn, download=name, ttl = ttl))
     return tree
 
