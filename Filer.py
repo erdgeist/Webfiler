@@ -7,6 +7,7 @@ from os import unlink, path, getenv, listdir, mkdir, urandom
 from shutil import rmtree
 from threading import Thread
 from random import randint
+from sys import stderr, exit
 
 from flask import Flask, render_template, jsonify, request, redirect, send_from_directory
 from flask_dropzone import Dropzone
@@ -170,6 +171,17 @@ def cleaner_thread():
 thread = Thread(target=cleaner_thread, args=())
 thread.daemon = True
 thread.start()
+
+try:
+    if not path.exists(path.join(basedir, 'Dokumente')):
+        mkdir(path.join(basedir, 'Dokumente'))
+    if not path.exists(path.join(basedir, 'Mandanten')):
+        mkdir(path.join(basedir, 'Mandanten'))
+    if not path.exists(path.join(basedir, 'Public')):
+        mkdir(path.join(basedir, 'Public'))
+except:
+    stderr.write("Error: Basedir not accessible\n")
+    exit(1)
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Filer")
