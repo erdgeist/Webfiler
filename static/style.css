@@ -1,0 +1,86 @@
+body {
+    font-family: "HelveticaNeueLight", "HelveticaNeue-Light", "Helvetica Neue Light", "HelveticaNeue", "Helvetica Neue", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif; font-weight:400; font-size:15pt; font-stretch:normal;
+    margin: 1em 0;
+    padding: 0 5%;
+}
+
+ul {
+    list-style-type: none;
+}
+
+li {
+    margin: 0 0 0.5em 0;
+}
+
+button {
+    margin: 0 0.5em 0 0;
+    min-width: 5.5em;
+}
+
+button.add,
+button.edit {
+    box-shadow:inset 0px 1px 0px 0px #bee2f9;
+    background:linear-gradient(to bottom, #63b8ee 5%, #468ccf 100%);
+    background-color:#63b8ee;
+    border-radius:9px;
+    border:1px solid #3866a3;
+    display:inline-block;
+    cursor:pointer;
+    color:#ffffff;
+    padding:5px 6px;
+    text-decoration:none;
+    text-shadow:0px 1px 0px #7cacde;
+}
+button.delete {
+    box-shadow:inset 0px 1px 0px 0px #cf866c;
+    background:linear-gradient(to bottom, #d0451b 5%, #bc3315 100%);
+    background-color:#d0451b;
+    border-radius:9px;
+    border:1px solid #942911;
+    display:inline-block;
+    cursor:pointer;
+    color:#ffffff;
+    padding:5px 6px;
+    text-decoration:none;
+    text-shadow:0px 1px 0px #854629;
+}
+button.add:hover,
+button.edit:hover {
+    background:linear-gradient(to bottom, #468ccf 5%, #63b8ee 100%);
+    background-color:#468ccf;
+}
+button.delete:hover {
+    background:linear-gradient(to bottom, #bc3315 5%, #d0451b 100%);
+    background-color:#bc3315;
+}
+
+button.add:active,
+button.edit:active,
+button.delete:active {
+    position:relative;
+    top:1px;
+}
+
+input[type="text"] {
+    padding: 0.3em 0.4em;
+
+    border: 1px solid grey;
+    border-radius: 6px;
+
+    font-weight: bold;
+    font-size: 13pt;
+    transition: background-color 1s;
+    color: #444;
+    min-width: 35%;
+}
+
+.age {
+    display: inline-block;
+    text-align: right;
+    border-radius: 4px;
+    border: solid 1px black;
+    background-color: grey;
+    padding: 0 0.2em;
+    margin-right: 0.5em;
+    width: 4em;
+}
