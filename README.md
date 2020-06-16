@@ -13,7 +13,7 @@ Currently, Webfiler comes with a Makefile which sets everything up for you. Afte
 Web server integration
 ======================
 
-Webfiler generates htpasswd files to protect your spaces. Webfiler has a sample nginx config you can use.
+Webfiler generates htpasswd files to protect your spaces. Webfiler has a [sample nginx config](nginx.conf.sample) you can use.
 
 License
 =======
