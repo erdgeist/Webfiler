@@ -180,9 +180,9 @@ thread.start()
 
 # Ensure all working directories are there
 try:
-    for datadir in (documentsdir, clientsdir, publicdir):
-        if not path.exists(path.join(basedir, datadir)):
-            mkdir(path.join(basedir, datadir))
+    for datadir in (basedir, path.join(basedir, documentsdir), path.join(basedir, clientsdir), path.join(basedir, publicdir)):
+        if not path.exists(datadir):
+            mkdir(datadir)
 except:
     stderr.write("Error: Basedir not accessible\n")
     exit(1)
