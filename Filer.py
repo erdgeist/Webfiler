@@ -58,7 +58,7 @@ def admin():
     return render_template(
         "admin.html",
         users=users,
-        tree=make_tree(basedir, publicdir),
+        tree=make_tree(basedir, publicdir, False),
         url_root=url_root,
         documentsdir=documentsdir,
     )
@@ -199,7 +199,7 @@ def custom_static_public(filename):
     return send_from_directory(path.join(basedir, publicdir), filename)
 
 
-def make_tree(rel, pathname):
+def make_tree(rel, pathname, clean_expired = True):
     tree = dict(name=pathname, download=path.basename(pathname), children=[])
     try:
         lst = listdir(path.join(rel, pathname))
@@ -209,12 +209,12 @@ def make_tree(rel, pathname):
         for name in lst:
             fn = path.join(pathname, name)
             if path.isdir(path.join(rel, fn)):
-                tree["children"].append(make_tree(rel, fn))
+                tree["children"].append(make_tree(rel, fn, clean_expired))
             else:
                 ttl = filettl - int(
                     (time.time() - path.getmtime(path.join(rel, fn))) / (24 * 3600)
                 )
-                if ttl < 0:
+                if clean_expired and ttl < 0:
                     unlink(path.join(rel, fn))
                 else:
                     tree["children"].append(dict(name=fn, download=name, ttl=ttl))
