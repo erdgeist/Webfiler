@@ -31,7 +31,7 @@ function generatePassword() {
         <button class="delete">löschen</button>
     </form>
     <button class="edit" onclick="document.getElementById('user').value='{{item}}'">edit</button>
-    <a href="/admin/'+{{documentsdir}}+'/{{item}}">{{item}}</a> <small>Mandanten-URL: {{url_root}}{{documentsdir}}/{{item}}</small>
+    <a href="/admin/"+{{documentsdir}}+"/{{item}}">{{item}}</a> <small>Mandanten-URL: {{url_root}}{{documentsdir}}/{{item}}</small>
   </li>
 {%- endfor %}
 <li>
