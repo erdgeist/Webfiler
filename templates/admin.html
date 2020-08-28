@@ -8,7 +8,10 @@
 <link rel="stylesheet" href="/static/style.css">
 <script>
 function generatePassword() {
-  var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&'()*+,-./:;<=>?@_{|}~";
+
+  /* Alphabet that avoids: 0O 1I and certain special characters that some people may fail to enter
+     when you tell them the password via phone. */
+  var chars = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ!#$%&()*+,-.:;<=>?@";
   var randarray = new Uint16Array(32);
   var retval = "";
   window.crypto.getRandomValues(randarray);
