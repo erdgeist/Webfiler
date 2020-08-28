@@ -30,6 +30,8 @@ app.config['DROPZONE_ALLOWED_FILE_TYPE'] = ''
 
 app.config['DROPZONE_DEFAULT_MESSAGE'] = 'Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.'
 
+app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
+
 dropzone = Dropzone(app)
 
 basedir = getenv('FILER_BASEDIR', './Daten')
@@ -42,11 +44,18 @@ filettl = int(getenv('FILER_FILETTL', 10))
 def admin():
     url_root = request.url_root.replace('http://', 'https://', 1)
     users = listdir(path.join(basedir, 'Mandanten'))
-    return render_template('admin.html', users = users, tree = make_tree(basedir, 'Public'), url_root = url_root)
+    return render_template('admin.html', users = users, tree = make_tree(basedir, 'Public'),
+                           url_root = url_root, organization = app.config['ORGANIZATION'])
 
 @app.route("/admin/Dokumente/<user>", methods=['GET'])
 def admin_dokumente(user):
-    return render_template('mandant.html', admin = 'admin/', user = user, tree = make_tree(basedir, path.join('Dokumente', user)))
+    return render_template('mandant.html', admin = 'admin/', user = user,
+                           tree = make_tree(basedir, path.join('Dokumente', user)),
+                           organization = app.config['ORGANIZATION'])
+
+#
+# API
+#
 
 @app.route("/admin/del-user/<user>", methods=['POST'])
 def admin_deluser(user):
@@ -85,7 +94,9 @@ def admin_newuser():
 ####
 @app.route("/Dokumente/<user>", methods=['GET'])
 def mandant(user):
-    return render_template('mandant.html', admin = '', user = user, tree = make_tree(basedir, path.join('Dokumente', user)))
+    return render_template('mandant.html', admin = '', user = user,
+                           tree = make_tree(basedir, path.join('Dokumente', user)),
+                           organization = app.config['ORGANIZATION'])
 
 #### UPLOAD FILE ROUTES ####
 ####
