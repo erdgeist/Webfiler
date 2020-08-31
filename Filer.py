@@ -3,7 +3,7 @@
 import hashlib
 import base64
 import time
-from os import unlink, path, getenv, listdir, mkdir, urandom
+from os import unlink, path, getenv, listdir, mkdir, chmod, umask, urandom
 from shutil import rmtree
 from threading import Thread
 from random import randint
@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'Silence is golden. Gerd Eist.'
+app.config['SECRET_KEY'] = 'None'
 #app.jinja_env.trim_blocks = True
 #app.jinja_env.lstrip_blocks = True
 
@@ -33,7 +33,7 @@ app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
 
 dropzone = Dropzone(app)
 
-basedir = getenv('FILER_BASEDIR', './Daten')
+basedir = getenv('FILER_BASEDIR', 'Daten')
 filettl = int(getenv('FILER_FILETTL', 10)) # in days
 support_public_docs = False
 default_http_header = {} #'Content-Security-Policy' : "default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline';"}
@@ -85,10 +85,10 @@ def admin_newuser():
     tagged_digest_salt = '{{SSHA}}{}'.format(digest_salt_b64.decode('ascii'))
 
     try:
-        if not path.exists(path.join(basedir, 'Dokumente', directory)):
-            mkdir(path.join(basedir, 'Dokumente', directory))
+        make_dir(path.join('Dokumente', directory))
         with open(path.join(basedir, 'Mandanten', directory), 'w+', encoding='utf-8') as htpasswd:
             htpasswd.write("{}:{}\n".format(user, tagged_digest_salt))
+        
     except OSError as error:
         return "Couldn't create user scope", 500
     return redirect('/admin')
@@ -168,7 +168,7 @@ def make_tree(rel, pathname):
     else:
         for name in lst:
             fn = path.join(pathname, name)
-            if path.isdir(path.join(rel,fn)):
+            if path.isdir(path.join(rel, fn)):
                 tree['children'].append(make_tree(rel, fn))
             else:
                 ttl = filettl -  int((time.time() - path.getmtime(path.join(rel,fn))) / (24*3600))
@@ -185,9 +185,13 @@ def cleaner_thread():
         time.sleep(21600 + randint(1, 1800))
 
 def make_dir(dir_name):
-    if not path.exists(path.join(basedir, dir_name)):
-        mkdir(path.join(basedir, dir_name))
-    
+    p = path.join(basedir, dir_name)
+    if not path.exists(p):
+        mkdir(p)
+        chmod(p, 0o700)
+
+umask(0o177)
+        
 thread = Thread(target=cleaner_thread, args=())
 thread.daemon = True
 thread.start()
@@ -199,6 +203,10 @@ try:
     
 except:
     stderr.write("Error: Basedir not accessible\n")
+    exit(1)
+
+if app.config['SECRET_KEY'] is None:
+    stderr.write("Error: Flask secret key is not set.\n")
     exit(1)
 
 if __name__ == "__main__":
