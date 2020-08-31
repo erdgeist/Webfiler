@@ -11,3 +11,11 @@ function generatePassword() {
   document.getElementById("password").value = retval;
 }
 
+
+function copyPassword() {
+    navigator.clipboard.writeText(document.getElementById("password").value)
+
+    setTimeout(() => {
+	navigator.clipboard.writeText('password removed from clipboard after timeout')
+    }, 30000);
+}
