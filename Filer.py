@@ -24,18 +24,19 @@ app.config['DROPZONE_SERVE_LOCAL'] = True
 app.config['DROPZONE_MAX_FILE_SIZE'] = 128
 app.config['DROPZONE_UPLOAD_MULTIPLE'] = True
 app.config['DROPZONE_PARALLEL_UPLOADS'] = 10
-
 app.config['DROPZONE_ALLOWED_FILE_CUSTOM'] = True
 app.config['DROPZONE_ALLOWED_FILE_TYPE'] = ''
-
 app.config['DROPZONE_DEFAULT_MESSAGE'] = 'Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.'
+
 
 app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
 
 dropzone = Dropzone(app)
 
 basedir = getenv('FILER_BASEDIR', './Daten')
-filettl = int(getenv('FILER_FILETTL', 10))
+filettl = int(getenv('FILER_FILETTL', 10)) # in days
+support_public_docs = False
+default_http_header = {} #'Content-Security-Policy' : "default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline';"}
 
 #### ADMIN FACING DIRECTORY LISTS ####
 ####
@@ -45,12 +46,15 @@ def admin():
     url_root = request.url_root.replace('http://', 'https://', 1)
     users = listdir(path.join(basedir, 'Mandanten'))
     return render_template('admin.html', users = users, tree = make_tree(basedir, 'Public'),
-                           url_root = url_root, organization = app.config['ORGANIZATION'])
+                           url_root = url_root, support_public_docs=support_public_docs,
+                           organization = app.config['ORGANIZATION']), 200, default_http_header
+    
 
 @app.route("/admin/Dokumente/<user>", methods=['GET'])
 def admin_dokumente(user):
     return render_template('mandant.html', admin = 'admin/', user = user,
                            tree = make_tree(basedir, path.join('Dokumente', user)),
+                           support_public_docs = support_public_docs,
                            organization = app.config['ORGANIZATION'])
 
 #
@@ -96,6 +100,7 @@ def admin_newuser():
 def mandant(user):
     return render_template('mandant.html', admin = '', user = user,
                            tree = make_tree(basedir, path.join('Dokumente', user)),
+                           support_public_docs = support_public_docs,
                            organization = app.config['ORGANIZATION'])
 
 #### UPLOAD FILE ROUTES ####
@@ -179,17 +184,19 @@ def cleaner_thread():
         # sleep for 6h plus jitter
         time.sleep(21600 + randint(1, 1800))
 
+def make_dir(dir_name):
+    if not path.exists(path.join(basedir, dir_name)):
+        mkdir(path.join(basedir, dir_name))
+    
 thread = Thread(target=cleaner_thread, args=())
 thread.daemon = True
 thread.start()
 
 try:
-    if not path.exists(path.join(basedir, 'Dokumente')):
-        mkdir(path.join(basedir, 'Dokumente'))
-    if not path.exists(path.join(basedir, 'Mandanten')):
-        mkdir(path.join(basedir, 'Mandanten'))
-    if not path.exists(path.join(basedir, 'Public')):
-        mkdir(path.join(basedir, 'Public'))
+    make_dir('Public')
+    make_dir('Mandanten')
+    make_dir('Dokumente')
+    
 except:
     stderr.write("Error: Basedir not accessible\n")
     exit(1)

@@ -4,32 +4,17 @@
 <title>Filer Admin</title>
 <meta charset="UTF-8">
 {{ dropzone.load_css() }}
-{{ dropzone.style('border: 2px dashed #0087F7; min-height: 3em;') }}
 <link rel="stylesheet" href="/static/style.css">
-<script>
-function generatePassword() {
-
-  /* Alphabet that avoids: 0O 1I and certain special characters that some people may fail to enter
-     when you tell them the password via phone. */
-  var chars = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ!#$%&()*+,-.:;<=>?@";
-  var randarray = new Uint16Array(32);
-  var retval = "";
-  window.crypto.getRandomValues(randarray);
-  for (var i = 0, n = chars.length; i < randarray.length; ++i)
-    retval += chars.charAt(Math.floor(randarray[i] * n / 65336));
-  console.log(retval);
-  document.getElementById("password").value = retval;
-}
-</script>
+<script src="/static/helper.js"></script>
 </head>
-<body>
+<body onLoad="generatePassword()">
 {{ dropzone.load_js() }}
 <h1>{{organization}} – Administration</h1>
 <h2>Mandanten</h2>
 <ul>
 {%- for item in users %}
   <li>
-    <form action="/admin/del-user/{{item}}" method="post" style="display: inline;" onsubmit="return confirm('Sind Sie sicher?');">
+    <form action="/admin/del-user/{{item}}" method="post" onsubmit="return confirm('Sind Sie sicher?');">
         <input type="hidden" name="_method" value="DELETE">
         <button class="delete">löschen</button>
     </form>
@@ -41,17 +26,18 @@ function generatePassword() {
   <form action="/admin/new-user" method="post">
   <input id="user" name="user" type="text" placeholder="Name" required></input>
   <input id="password" name="password" type="text" placeholder="Passwort" autocomplete="off" required></input>
-  <script>generatePassword()</script>
-  <button class="add" type="button" onclick="generatePassword()">Zufall</button>
+  <button class="add" type="button" onclick="generatePassword()" >Generieren</button>
   <button class="add">Hinzufügen</button>
   </form>
 </li>
 </ul>
 
+{%- if support_public_docs %}
+
 <h2>Öffentliche Dokumente</h2>
 <ul>
 {%- for item in tree.children recursive %}
-    <li><form action="/admin/{{ item.name }}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure?');">
+    <li><form action="/admin/{{ item.name }}" method="post" onsubmit="return confirm('Are you sure?');">
         <input type="hidden" name="_method" value="DELETE">
         <button class="delete">löschen</button>
         </form>
@@ -66,5 +52,8 @@ function generatePassword() {
 <div class="droppy">{{ dropzone.create(action='/admin') }}</div>
 
 {{ dropzone.config() }}
+
+{% endif -%}
+
 </body>
 </html>
