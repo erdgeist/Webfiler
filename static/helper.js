@@ -8,8 +8,6 @@ function generatePassword() {
   window.crypto.getRandomValues(randarray);
   for (var i = 0, n = chars.length; i < randarray.length; ++i)
     retval += chars.charAt(Math.floor(randarray[i] * n / 65336));
-  console.log(retval);
   document.getElementById("password").value = retval;
 }
-
 
