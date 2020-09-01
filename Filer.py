@@ -58,8 +58,8 @@ def admin():
 
 @app.route("/admin/Dokumente/<user>", methods=['GET'])
 def admin_dokumente(user):
-    return render_template('mandant.html', admin = 'admin/', user = user,
-                           tree = make_tree(basedir, path.join('Dokumente', user)),
+    return render_template('mandant.html', admin = 'admin/', user = secure_filename(user),
+                           tree = make_tree(basedir, path.join('Dokumente', secure_filename(user))),
                            support_public_docs = support_public_docs,
                            nonce = nonce,
                            organization = app.config['ORGANIZATION']), 200, default_http_header
@@ -94,7 +94,7 @@ def admin_newuser():
     try:
         make_dir(path.join('Dokumente', directory))
         with open(path.join(basedir, 'Mandanten', directory), 'w+', encoding='utf-8') as htpasswd:
-            htpasswd.write("{}:{}\n".format(user, tagged_digest_salt))
+            htpasswd.write("{}:{}\n".format(secure_filename(user)), tagged_digest_salt))
         
     except OSError as error:
         return "Couldn't create user scope", 500
@@ -105,8 +105,8 @@ def admin_newuser():
 ####
 @app.route("/Dokumente/<user>", methods=['GET'])
 def mandant(user):
-    return render_template('mandant.html', admin = '', user = user,
-                           tree = make_tree(basedir, path.join('Dokumente', user)),
+    return render_template('mandant.html', admin = '', user = secure_filename(user),
+                           tree = make_tree(basedir, path.join('Dokumente', secure_filename(user))),
                            support_public_docs = support_public_docs,
                            nonce = nonce,
                            organization = app.config['ORGANIZATION']), 200, default_http_header
@@ -145,14 +145,14 @@ def delete_file_mandant(user, filename):
     method = request.form.get('_method', 'POST')
     if method == 'DELETE':
         unlink(path.join(basedir, 'Dokumente', secure_filename(user), secure_filename(filename)))
-    return redirect('/Dokumente/'+user)
+    return redirect('/Dokumente/'+ secure_filename(user))
 
 @app.route('/admin/Dokumente/<user>/<path:filename>', methods=['POST'])
 def delete_file_mandant_admin(user, filename):
     method = request.form.get('_method', 'POST')
     if method == 'DELETE':
         unlink(path.join(basedir, 'Dokumente', secure_filename(user), secure_filename(filename)))
-    return redirect('/admin/Dokumente/'+user)
+    return redirect('/admin/Dokumente/'+ secure_filename(user))
 
 @app.route('/admin/Public/<path:filename>', methods=['POST'])
 def delete_file_admin(filename):
