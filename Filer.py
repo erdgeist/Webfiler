@@ -10,6 +10,7 @@ from random import randint
 from sys import stderr, exit
 
 from flask import Flask, render_template, jsonify, request, redirect, send_from_directory
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_dropzone import Dropzone
 from argparse import ArgumentParser
 from werkzeug.utils import secure_filename
@@ -21,15 +22,24 @@ app.config['SECRET_KEY'] = None
 
 app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['DROPZONE_SERVE_LOCAL'] = True
-
+app.config['DROPZONE_ENABLE_CSRF'] = True
+app.config['DROPZONE_MAX_FILE_SIZE'] = 128
+app.config['DROPZONE_UPLOAD_MULTIPLE'] = True
+app.config['DROPZONE_PARALLEL_UPLOADS'] = 10
+app.config['DROPZONE_ALLOWED_FILE_CUSTOM'] = True
+app.config['DROPZONE_ALLOWED_FILE_TYPE'] = ''
+app.config['DROPZONE_DEFAULT_MESSAGE'] = 'Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.'
 
 app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
 
+csrf = CSRFProtect(app)
 dropzone = Dropzone(app)
+
+nonce = base64.b64encode(urandom(64)).decode('utf8')
 basedir = getenv('FILER_BASEDIR', 'Daten')
 filettl = int(getenv('FILER_FILETTL', 10)) # in days
 support_public_docs = True
-default_http_header = {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:;",
+default_http_header = {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:; script-src 'self' 'nonce-{nonce}'",
                        'X-Frame-Options' : 'SAMEORIGIN',
                        'X-Content-Type-Options' : 'nosniff'}
 
@@ -42,6 +52,7 @@ def admin():
     users = listdir(path.join(basedir, 'Mandanten'))
     return render_template('admin.html', users = users, tree = make_tree(basedir, 'Public'),
                            url_root = url_root, support_public_docs=support_public_docs,
+                           nonce = nonce,
                            organization = app.config['ORGANIZATION']), 200, default_http_header
     
 
@@ -50,6 +61,7 @@ def admin_dokumente(user):
     return render_template('mandant.html', admin = 'admin/', user = user,
                            tree = make_tree(basedir, path.join('Dokumente', user)),
                            support_public_docs = support_public_docs,
+                           nonce = nonce,
                            organization = app.config['ORGANIZATION']), 200, default_http_header
 
 #
@@ -96,6 +108,7 @@ def mandant(user):
     return render_template('mandant.html', admin = '', user = user,
                            tree = make_tree(basedir, path.join('Dokumente', user)),
                            support_public_docs = support_public_docs,
+                           nonce = nonce,
                            organization = app.config['ORGANIZATION']), 200, default_http_header
 
 #### UPLOAD FILE ROUTES ####
@@ -118,6 +131,11 @@ def upload_admin():
             filename = secure_filename(f.filename)
             f.save(path.join(basedir, 'Public', filename))
     return 'upload template'
+
+# handle CSRF error
+@app.errorhandler(CSRFError)
+def csrf_error(e):
+    return e.description, 400
 
 #### DELETE FILE ROUTES ####
 ####

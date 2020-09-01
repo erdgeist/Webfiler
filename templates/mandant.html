@@ -16,21 +16,25 @@
 <h2>Dokumente</h2>
 <ul>
 {%- for item in tree.children recursive %}
-    <li><form action="/{{admin}}{{ item.name }}" method="post" name="del-confirm">
-        <input type="hidden" name="_method" value="DELETE">
-        <button class="delete" type="submit">löschen</button>
-        </form>
-        <div class="age">{{item.ttl}} Tag{%- if not item.ttl == 1 -%}e{%- endif -%}</div>
-    {%- if 'children' in item -%}
-        {{item.download}}<br/>
-        <ul>{{ loop(item.children) }}</ul>
-    {%- else -%}
-        <a href="/{{admin}}{{item.name}}" download="{{item.download}}">{{ item.download }}</a>
-    {%- endif %}</li>
+<li>
+  <form action="/{{admin}}{{ item.name }}" method="post" name="del-confirm">
+    <input type="hidden" name="_method" value="DELETE">
+    <button class="delete" type="submit">löschen</button>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  </form>
+  <div class="age">{{item.ttl}} Tag{%- if not item.ttl == 1 -%}e{%- endif -%}</div>
+  {%- if 'children' in item -%}
+  {{item.download}}<br/>
+  <ul>{{ loop(item.children) }}</ul>
+  {%- else -%}
+  <a href="/{{admin}}{{item.name}}" download="{{item.download}}">{{ item.download }}</a>
+  {%- endif %}</li>
 {%- endfor %}
 </ul>
 
 <div class="droppy">{{ dropzone.create(action="/"+admin+"Dokumente/"+user) }}</div>
+
+{{ dropzone.config(nonce=nonce) }}
 
 </body>
 </html>
