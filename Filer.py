@@ -15,28 +15,23 @@ from argparse import ArgumentParser
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'None'
+app.config['SECRET_KEY'] = None
 #app.jinja_env.trim_blocks = True
 #app.jinja_env.lstrip_blocks = True
 
 app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['DROPZONE_SERVE_LOCAL'] = True
-app.config['DROPZONE_MAX_FILE_SIZE'] = 128
-app.config['DROPZONE_UPLOAD_MULTIPLE'] = True
-app.config['DROPZONE_PARALLEL_UPLOADS'] = 10
-app.config['DROPZONE_ALLOWED_FILE_CUSTOM'] = True
-app.config['DROPZONE_ALLOWED_FILE_TYPE'] = ''
-app.config['DROPZONE_DEFAULT_MESSAGE'] = 'Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.'
 
 
 app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
 
 dropzone = Dropzone(app)
-
 basedir = getenv('FILER_BASEDIR', 'Daten')
 filettl = int(getenv('FILER_FILETTL', 10)) # in days
-support_public_docs = False
-default_http_header = {} #'Content-Security-Policy' : "default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline';"}
+support_public_docs = True
+default_http_header = {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:;",
+                       'X-Frame-Options' : 'SAMEORIGIN',
+                       'X-Content-Type-Options' : 'nosniff'}
 
 #### ADMIN FACING DIRECTORY LISTS ####
 ####
@@ -55,7 +50,7 @@ def admin_dokumente(user):
     return render_template('mandant.html', admin = 'admin/', user = user,
                            tree = make_tree(basedir, path.join('Dokumente', user)),
                            support_public_docs = support_public_docs,
-                           organization = app.config['ORGANIZATION'])
+                           organization = app.config['ORGANIZATION']), 200, default_http_header
 
 #
 # API
@@ -101,7 +96,7 @@ def mandant(user):
     return render_template('mandant.html', admin = '', user = user,
                            tree = make_tree(basedir, path.join('Dokumente', user)),
                            support_public_docs = support_public_docs,
-                           organization = app.config['ORGANIZATION'])
+                           organization = app.config['ORGANIZATION']), 200, default_http_header
 
 #### UPLOAD FILE ROUTES ####
 ####

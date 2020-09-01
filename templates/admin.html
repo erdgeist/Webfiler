@@ -5,20 +5,20 @@
 <meta charset="UTF-8">
 {{ dropzone.load_css() }}
 <link rel="stylesheet" href="/static/style.css">
+{{ dropzone.load_js() }}
 <script src="/static/helper.js"></script>
 </head>
-<body onLoad="generatePassword()">
-{{ dropzone.load_js() }}
+<body>
 <h1>{{organization}} – Administration</h1>
 <h2>Mandanten</h2>
 <ul>
 {%- for item in users %}
   <li>
-    <form action="/admin/del-user/{{item}}" method="post" onsubmit="return confirm('Sind Sie sicher?');">
+    <form action="/admin/del-user/{{item}}" name="del-confirm" method="post">
         <input type="hidden" name="_method" value="DELETE">
         <button class="delete">löschen</button>
     </form>
-    <button class="edit" onclick="document.getElementById('user').value='{{item}}'">edit</button>
+    <button class="edit" name="edit" value="{{item}}">edit</button>
     <a href="/admin/Dokumente/{{item}}">{{item}}</a> <small>Mandanten-URL: {{url_root}}Dokumente/{{item}}</small>
   </li>
 {%- endfor %}
@@ -26,8 +26,8 @@
   <form action="/admin/new-user" method="post">
   <input id="user" name="user" type="text" placeholder="Name" required></input>
   <input id="password" name="password" type="text" placeholder="Passwort" autocomplete="off" required></input>
-  <button class="add" type="button" onclick="generatePassword()" >Generieren</button>
-  <button class="add" type="button" onclick="copyPassword()" >Kopieren</button>
+  <button class="add" id="generatePassword" type="button">Generieren</button>
+  <button class="add" id="copyPassword" type="button">Kopieren</button>
   <button class="add">Hinzufügen</button>
   </form>
 </li>
@@ -38,7 +38,7 @@
 <h2>Öffentliche Dokumente</h2>
 <ul>
 {%- for item in tree.children recursive %}
-    <li><form action="/admin/{{ item.name }}" method="post" onsubmit="return confirm('Are you sure?');">
+    <li><form action="/admin/{{ item.name }}" method="post" name="del-confirm">
         <input type="hidden" name="_method" value="DELETE">
         <button class="delete">löschen</button>
         </form>
@@ -51,8 +51,6 @@
 
 <h2>Öffentliches Dokument hochladen</h2>
 <div class="droppy">{{ dropzone.create(action='/admin') }}</div>
-
-{{ dropzone.config() }}
 
 {% endif -%}
 
