@@ -38,6 +38,7 @@ app.config["DROPZONE_SERVE_LOCAL"] = True
 app.config["DROPZONE_ENABLE_CSRF"] = True
 
 app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = 'Strict'
 
 app.config["ORGANIZATION"] = "Kanzlei Hubrig"
 app.config["TITLE"] = "Filer"
