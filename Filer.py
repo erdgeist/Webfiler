@@ -29,10 +29,6 @@ app.config["DROPZONE_ALLOWED_FILE_TYPE"] = ""
 app.config['DROPZONE_SERVE_LOCAL'] = True
 app.config['DROPZONE_ENABLE_CSRF'] = True
 
-app.config[
-    "DROPZONE_DEFAULT_MESSAGE"
-] = _("Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.")
-
 app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
 app.config['TITLE'] = "Filer"
 app.config['LANGUAGES'] = ['en', 'de']
@@ -56,6 +52,7 @@ csrf = CSRFProtect(app)
 dropzone = Dropzone(app)
 babel = Babel(app)
 
+
 nonce = base64.b64encode(urandom(64)).decode('utf8')
 default_http_header = \
     {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:; script-src 'self' 'nonce-{nonce}'",
@@ -63,11 +60,18 @@ default_http_header = \
      'X-Content-Type-Options' : 'nosniff'}
 
 
+def update_dropzone_message():
+    app.config[
+        "DROPZONE_DEFAULT_MESSAGE"
+    ] = _("Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.")
+
 #### ADMIN FACING DIRECTORY LISTS ####
 ####
 ####
 @app.route("/admin", methods=["GET"])
 def admin():
+        
+    update_dropzone_message()
     url_root = request.url_root.replace('http://', 'https://', 1)
     users = listdir(path.join(basedir, clientsdir))
     return render_template('admin.html', users = users, tree = make_tree(basedir, publicdir),
@@ -82,6 +86,7 @@ def admin():
 
 @app.route("/admin/" + documentsdir + "/<user>", methods=["GET"])
 def admin_dokumente(user):
+    update_dropzone_message()
     return render_template('mandant.html', admin = 'admin/', user = secure_filename(user),
                            tree = make_tree(basedir, path.join(documentsdir, secure_filename(user))),
                            documentsdir=documentsdir,
@@ -133,6 +138,7 @@ def admin_newuser():
 ####
 @app.route("/" + documentsdir + "/<user>", methods=["GET"])
 def mandant(user):
+    update_dropzone_message()
     return render_template('mandant.html', admin = '', user = secure_filename(user),
                            tree = make_tree(basedir, path.join(documentsdir, secure_filename(user))),
                            documentsdir=documentsdir,
