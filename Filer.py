@@ -3,6 +3,7 @@
 import hashlib
 import base64
 import time
+import gpgencryption
 from os import unlink, path, getenv, listdir, mkdir, chmod, umask, urandom
 from shutil import rmtree
 from threading import Thread
@@ -16,6 +17,9 @@ from argparse import ArgumentParser
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+### start of config
+
 app.config['SECRET_KEY'] = None
 #app.jinja_env.trim_blocks = True
 #app.jinja_env.lstrip_blocks = True
@@ -32,16 +36,25 @@ app.config['DROPZONE_DEFAULT_MESSAGE'] = 'Ziehe die Dateien hier hin, um sie hoc
 
 app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
 
+filettl = int(getenv('FILER_FILETTL', 10)) # file lifetime in days
+support_public_docs = True
+
+gpg_enable_upload_encryption = True # encrypt customer-uploaded data via GPG
+gpg_recipient_fprint = None
+gpg_key_server='keys.openpgp.org'
+                    
+### end of config
+
 csrf = CSRFProtect(app)
 dropzone = Dropzone(app)
+basedir = getenv('FILER_BASEDIR', 'Daten')
+gpg_home_dir = "Daten/gpghome"
 
 nonce = base64.b64encode(urandom(64)).decode('utf8')
-basedir = getenv('FILER_BASEDIR', 'Daten')
-filettl = int(getenv('FILER_FILETTL', 10)) # in days
-support_public_docs = True
-default_http_header = {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:; script-src 'self' 'nonce-{nonce}'",
-                       'X-Frame-Options' : 'SAMEORIGIN',
-                       'X-Content-Type-Options' : 'nosniff'}
+default_http_header = \
+    {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:; script-src 'self' 'nonce-{nonce}'",
+     'X-Frame-Options' : 'SAMEORIGIN',
+     'X-Content-Type-Options' : 'nosniff'}
 
 #### ADMIN FACING DIRECTORY LISTS ####
 ####
@@ -94,7 +107,7 @@ def admin_newuser():
     try:
         make_dir(path.join('Dokumente', directory))
         with open(path.join(basedir, 'Mandanten', directory), 'w+', encoding='utf-8') as htpasswd:
-            htpasswd.write("{}:{}\n".format(secure_filename(user)), tagged_digest_salt))
+            htpasswd.write("{}:{}\n".format(secure_filename(user), tagged_digest_salt))
         
     except OSError as error:
         return "Couldn't create user scope", 500
@@ -114,22 +127,37 @@ def mandant(user):
 #### UPLOAD FILE ROUTES ####
 ####
 ####
+
 @app.route('/Dokumente/<user>', methods=['POST'])
+def upload_mandant_as_mandant(user):
+    return _upload_mandant(user, encrypt=(gpg_enable_upload_encryption and gpg_recipient_fprint is not None))
+
 @app.route('/admin/Dokumente/<user>', methods=['POST'])
-def upload_mandant(user):
-    for key, f in request.files.items():
-        if key.startswith('file'):
-            username = secure_filename(user)
-            filename = secure_filename(f.filename)
-            f.save(path.join(basedir, 'Dokumente', username, filename))
-    return 'upload template'
+def upload_mandant_as_admin(user):
+    return _upload_mandant(user)
 
 @app.route('/admin', methods=['POST'])
 def upload_admin():
+    return _upload_mandant()
+
+
+def _upload_mandant(user=None, encrypt=False):
     for key, f in request.files.items():
         if key.startswith('file'):
             filename = secure_filename(f.filename)
-            f.save(path.join(basedir, 'Public', filename))
+            if user:
+                username = secure_filename(user)
+                pathname = path.join(basedir, 'Dokumente', username, filename)
+
+                if encrypt:
+                    pathname += '.gpg'
+                    enc = gpgencryption.GPGEncryption(gpg_home_dir, gpg_key_server)
+                    enc.encrypt_fh(gpg_recipient_fprint, f, pathname) # no signing
+                    
+                else:
+                    f.save(pathname)
+            else:
+                f.save(path.join(basedir, 'Public', filename))
     return 'upload template'
 
 # handle CSRF error
@@ -203,6 +231,7 @@ def make_dir(dir_name):
         mkdir(p)
         chmod(p, 0o700)
 
+
 umask(0o177)
         
 thread = Thread(target=cleaner_thread, args=())
@@ -221,6 +250,13 @@ except:
 if app.config['SECRET_KEY'] is None:
     stderr.write("Error: Flask secret key is not set.\n")
     exit(1)
+
+# download GPG key if enabled
+if gpg_enable_upload_encryption and gpg_recipient_fprint is not None:
+    enc = gpgencryption.GPGEncryption(gpg_home_dir, gpg_key_server)
+    enc.download_key(gpg_recipient_fprint)
+
+
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Filer")
