@@ -4,34 +4,37 @@
 <title>Filer</title>
 <meta charset="UTF-8">
 {{ dropzone.load_css() }}
-{{ dropzone.style('border: 2px dashed #0087F7; min-height: 10px;') }}
 <link rel="stylesheet" href="/static/style.css">
+{{ dropzone.load_js() }}
+<script src="/static/helper.js"></script>
 </head>
 <body>
-{{ dropzone.load_js() }}
-<h1>Kanzlei Hubrig – Dokumenten-Austausch</h1>
+<h1>{{organization}} – Dokumenten-Austausch</h1>
 {%- if admin %}
 <a href="/admin">Zurück zur Übersicht</a>
 {% endif -%}
 <h2>Dokumente</h2>
 <ul>
 {%- for item in tree.children recursive %}
-    <li><form action="/{{admin}}{{ item.name }}" method="post" style="display: inline;" onsubmit="return confirm('Sind Sie sicher?');">
-        <input type="hidden" name="_method" value="DELETE">
-        <button class="delete" type="submit">löschen</button>
-        </form>
-        <div class="age">{{item.ttl}} Tag{%- if not item.ttl == 1 -%}e{%- endif -%}</div>
-    {%- if 'children' in item -%}
-        {{item.download}}<br/>
-        <ul>{{ loop(item.children) }}</ul>
-    {%- else -%}
-        <a href="/{{admin}}{{item.name}}" download="{{item.download}}">{{ item.download }}</a>
-    {%- endif %}</li>
+<li>
+  <form action="/{{admin}}{{ item.name }}" method="post" name="del-confirm">
+    <input type="hidden" name="_method" value="DELETE">
+    <button class="delete" type="submit">löschen</button>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  </form>
+  <div class="age">{{item.ttl}} Tag{%- if not item.ttl == 1 -%}e{%- endif -%}</div>
+  {%- if 'children' in item -%}
+  {{item.download}}<br/>
+  <ul>{{ loop(item.children) }}</ul>
+  {%- else -%}
+  <a href="/{{admin}}{{item.name}}" download="{{item.download}}">{{ item.download }}</a>
+  {%- endif %}</li>
 {%- endfor %}
 </ul>
 
 <div class="droppy">{{ dropzone.create(action="/"+admin+documentsdir+"/"+user) }}</div>
 
-{{ dropzone.config() }}
+{{ dropzone.config(nonce=nonce) }}
+
 </body>
 </html>

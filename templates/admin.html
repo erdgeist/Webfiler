@@ -4,64 +4,59 @@
 <title>Filer Admin</title>
 <meta charset="UTF-8">
 {{ dropzone.load_css() }}
-{{ dropzone.style('border: 2px dashed #0087F7; min-height: 3em;') }}
 <link rel="stylesheet" href="/static/style.css">
-<script>
-function generatePassword() {
-  var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&'()*+,-./:;<=>?@_{|}~";
-  var randarray = new Uint16Array(32);
-  var retval = "";
-  window.crypto.getRandomValues(randarray);
-  for (var i = 0, n = chars.length; i < randarray.length; ++i)
-    retval += chars.charAt(Math.floor(randarray[i] * n / 65336));
-  console.log(retval);
-  document.getElementById("password").value = retval;
-}
-</script>
+{{ dropzone.load_js() }}
+<script src="/static/helper.js"></script>
 </head>
 <body>
-{{ dropzone.load_js() }}
-<h1>Administration</h1>
+<h1>{{organization}} – Administration</h1>
 <h2>Mandanten</h2>
 <ul>
 {%- for item in users %}
-  <li>
-    <form action="/admin/del-user/{{item}}" method="post" style="display: inline;" onsubmit="return confirm('Sind Sie sicher?');">
-        <input type="hidden" name="_method" value="DELETE">
-        <button class="delete">löschen</button>
-    </form>
-    <button class="edit" onclick="document.getElementById('user').value='{{item}}'">edit</button>
+  <li><form action="/admin/del-user/{{item}}" name="del-confirm" method="post">
+      <input type="hidden" name="_method" value="DELETE">
+      <button class="delete">löschen</button>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/></form>
+    <button class="edit" name="edit" value="{{item}}">edit</button>
     <a href="/admin/{{documentsdir}}/{{item}}">{{item}}</a> <small>Mandanten-URL: {{url_root}}{{documentsdir}}/{{item}}</small>
   </li>
 {%- endfor %}
 <li>
   <form action="/admin/new-user" method="post">
-  <input id="user" name="user" type="text" placeholder="Name" required></input>
-  <input id="password" name="password" type="text" placeholder="Passwort" autocomplete="off" required></input>
-  <script>generatePassword()</script>
-  <button class="add" type="button" onclick="generatePassword()">Zufall</button>
-  <button class="add">Hinzufügen</button>
+    <input id="user" name="user" type="text" placeholder="Name" required></input>
+    <input id="password" name="password" type="text" placeholder="Passwort" autocomplete="off" required></input>
+    <button class="add" id="generatePassword" type="button">Generieren</button>
+    <button class="add" id="copyPassword" type="button">Kopieren</button>
+    <button class="add">Hinzufügen</button>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   </form>
 </li>
 </ul>
 
+{%- if support_public_docs %}
+
 <h2>Öffentliche Dokumente</h2>
 <ul>
 {%- for item in tree.children recursive %}
-    <li><form action="/admin/{{ item.name }}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure?');">
-        <input type="hidden" name="_method" value="DELETE">
-        <button class="delete">löschen</button>
-        </form>
-        <a href="{{ item.name }}" download="{{item.download}}">{{ item.download }}</a>
-    {%- if item.children -%}
-        <ul>{{ loop(item.children) }}</ul>
-    {%- endif %}</li>
+<li>
+  <form action="/admin/{{ item.name }}" method="post" name="del-confirm">
+    <input type="hidden" name="_method" value="DELETE">
+    <button class="delete">löschen</button>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  </form>
+  <a href="{{ item.name }}" download="{{item.download}}">{{ item.download }}</a>
+  {%- if item.children -%}
+  <ul>{{ loop(item.children) }}</ul>
+  {%- endif %}</li>
 {%- endfor %}
 </ul>
 
 <h2>Öffentliches Dokument hochladen</h2>
 <div class="droppy">{{ dropzone.create(action='/admin') }}</div>
 
-{{ dropzone.config() }}
+{{ dropzone.config(nonce=nonce) }}
+
+{% endif -%}
+
 </body>
 </html>
