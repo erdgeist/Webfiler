@@ -66,6 +66,7 @@ default_http_header = {
     "Content-Security-Policy": f"default-src 'self'; img-src 'self' data:; script-src 'self' 'nonce-{nonce}'",
     "X-Frame-Options": "SAMEORIGIN",
     "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy" : "no-referrer"
 }
 
 
