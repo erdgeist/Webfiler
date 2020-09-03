@@ -18,13 +18,15 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 ### start of config
-app.config["SECRET_KEY"] = None
+app.config["SECRET_KEY"] = 'None'
 # app.jinja_env.trim_blocks = True
 # app.jinja_env.lstrip_blocks = True
 
 
 app.config["DROPZONE_ALLOWED_FILE_CUSTOM"] = True
 app.config["DROPZONE_ALLOWED_FILE_TYPE"] = ""
+app.config['DROPZONE_SERVE_LOCAL'] = True
+app.config['DROPZONE_ENABLE_CSRF'] = True
 
 app.config[
     "DROPZONE_DEFAULT_MESSAGE"
@@ -43,7 +45,7 @@ basedir = getenv("FILER_BASEDIR", "./Daten")
 publicdir = getenv("FILER_PUBLICDIR", "Public")
 documentsdir = getenv("FILER_DOCUMENTSDIR", "Dokumente")
 clientsdir = getenv("FILER_CLIENTSSDIR", "Mandanten")
-gpg_home_dir = os.path.join(basedir, "gpghome")
+gpg_home_dir = path.join(basedir, "gpghome")
 
 ### end of config
 
@@ -111,8 +113,8 @@ def admin_newuser():
     tagged_digest_salt = "{{SSHA}}{}".format(digest_salt_b64.decode("ascii"))
 
     try:
-        make_dir(path.join(documentsdir, directory))
-        with open(path.join(basedir, 'Mandanten', directory), 'w+', encoding='utf-8') as htpasswd:
+        make_dir(path.join(basedir, documentsdir, directory))
+        with open(path.join(basedir, clientsdir, directory), 'w+', encoding='utf-8') as htpasswd:
             htpasswd.write("{}:{}\n".format(secure_filename(user), tagged_digest_salt))
         
     except OSError as error:
@@ -140,7 +142,8 @@ def mandant(user):
 def upload_mandant_as_mandant(user):
     return _upload_mandant(user, encrypt=(gpg_enable_upload_encryption and gpg_recipient_fprint is not None))
 
-@app.route("/admin/" + documentsdir + "/<user>", methods=["POST"])def upload_mandant_as_admin(user):
+@app.route("/admin/" + documentsdir + "/<user>", methods=["POST"])
+def upload_mandant_as_admin(user):
     return _upload_mandant(user)
 
 @app.route('/admin', methods=['POST'])
@@ -246,10 +249,9 @@ def cleaner_thread():
         time.sleep(21600 + randint(1, 1800))
 
 def make_dir(dir_name):
-    p = path.join(basedir, dir_name)
-    if not path.exists(p):
-        mkdir(p)
-        chmod(p, 0o700)
+    if not path.exists(dir_name):
+        mkdir(dir_name)
+        chmod(dir_name, 0o700)
 
 
 umask(0o177)
