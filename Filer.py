@@ -37,6 +37,8 @@ app.config["DROPZONE_ALLOWED_FILE_TYPE"] = ""
 app.config["DROPZONE_SERVE_LOCAL"] = True
 app.config["DROPZONE_ENABLE_CSRF"] = True
 
+app.config["SESSION_COOKIE_SECURE"] = True
+
 app.config["ORGANIZATION"] = "Kanzlei Hubrig"
 app.config["TITLE"] = "Filer"
 app.config["LANGUAGES"] = ["en", "de"]
