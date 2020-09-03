@@ -27,7 +27,7 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 ### start of config
-app.config["SECRET_KEY"] = "None"
+app.config["SECRET_KEY"] = getenv("SECRET_KEY", None)
 # app.jinja_env.trim_blocks = True
 # app.jinja_env.lstrip_blocks = True
 

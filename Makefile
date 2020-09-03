@@ -1,7 +1,7 @@
 all: install
 
-run: venv/bin/python3 translations/en/LC_MESSAGES/messages.mo 
-	./venv/bin/python Filer.py -P 5000
+run: venv/bin/python3 translations/en/LC_MESSAGES/messages.mo
+	SECRET_KEY=secret ./venv/bin/python Filer.py -P 5000
 
 translations/en/LC_MESSAGES/messages.mo:
 	./venv/bin/pybabel compile -d translations
