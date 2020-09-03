@@ -10,9 +10,10 @@ from threading import Thread
 from random import randint
 from sys import stderr, exit
 
-from flask import Flask, render_template, jsonify, request, redirect, send_from_directory
+from flask import Flask, render_template, jsonify, request, redirect, send_from_directory, g
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_dropzone import Dropzone
+from flask_babel import Babel, _, refresh
 from argparse import ArgumentParser
 from werkzeug.utils import secure_filename
 
@@ -30,9 +31,11 @@ app.config['DROPZONE_ENABLE_CSRF'] = True
 
 app.config[
     "DROPZONE_DEFAULT_MESSAGE"
-] = "Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl."
+] = _("Ziehe die Dateien hier hin, um sie hochzuladen oder klicken Sie zur Auswahl.")
 
 app.config['ORGANIZATION'] = 'Kanzlei Hubrig'
+app.config['TITLE'] = "Filer"
+app.config['LANGUAGES'] = ['en', 'de']
 
 filettl = int(getenv('FILER_FILETTL', 10)) # file lifetime in days
 support_public_docs = True
@@ -51,7 +54,8 @@ gpg_home_dir = path.join(basedir, "gpghome")
 
 csrf = CSRFProtect(app)
 dropzone = Dropzone(app)
-                    
+babel = Babel(app)
+
 nonce = base64.b64encode(urandom(64)).decode('utf8')
 default_http_header = \
     {'Content-Security-Policy' : f"default-src 'self'; img-src 'self' data:; script-src 'self' 'nonce-{nonce}'",
@@ -66,12 +70,13 @@ default_http_header = \
 def admin():
     url_root = request.url_root.replace('http://', 'https://', 1)
     users = listdir(path.join(basedir, clientsdir))
-    return render_template('admin.html', users = users, tree = make_tree(basedir, 'Public'),
+    return render_template('admin.html', users = users, tree = make_tree(basedir, publicdir),
                            url_root = url_root,
 			   documentsdir=documentsdir,
 			   support_public_docs=support_public_docs,
                            nonce = nonce,
-                           organization = app.config['ORGANIZATION']), 200, default_http_header
+                           organization = app.config['ORGANIZATION'],
+                           title = app.config['TITLE']), 200, default_http_header
     
 
 
@@ -82,7 +87,8 @@ def admin_dokumente(user):
                            documentsdir=documentsdir,
                            support_public_docs = support_public_docs,
                            nonce = nonce,
-                           organization = app.config['ORGANIZATION']), 200, default_http_header
+                           organization = app.config['ORGANIZATION'],
+                           title = app.config['TITLE']), 200, default_http_header
 
 #
 # API
@@ -132,7 +138,8 @@ def mandant(user):
                            documentsdir=documentsdir,
                            support_public_docs = support_public_docs,
                            nonce = nonce,
-                           organization = app.config['ORGANIZATION']), 200, default_http_header
+                           organization = app.config['ORGANIZATION'],
+                           title = app.config['TITLE']), 200, default_http_header
 
 #### UPLOAD FILE ROUTES ####
 ####
@@ -157,7 +164,7 @@ def _upload_mandant(user=None, encrypt=False):
             filename = secure_filename(f.filename)
             if user:
                 username = secure_filename(user)
-                pathname = path.join(basedir, publicdir, username, filename)
+                pathname = path.join(basedir, documentsdir, username, filename)
 
                 if encrypt:
                     pathname += '.gpg'
@@ -167,7 +174,7 @@ def _upload_mandant(user=None, encrypt=False):
                 else:
                     f.save(pathname)
             else:
-                f.save(path.join(basedir, 'Public', filename))
+                f.save(path.join(basedir, publicdir, filename))
     return 'upload template'
 
 # handle CSRF error
@@ -183,7 +190,7 @@ def delete_file_mandant(user, filename):
     method = request.form.get('_method', 'POST')
     if method == 'DELETE':
         unlink(path.join(basedir, documentsdir, secure_filename(user), secure_filename(filename)))
-    return redirect("/" + documentsdir + "/" + user)
+    return redirect("/" + documentsdir + "/" + secure_filename(user))
 
 
 @app.route("/admin/" + documentsdir + "/<user>/<path:filename>", methods=["POST"])
@@ -191,7 +198,7 @@ def delete_file_mandant_admin(user, filename):
     method = request.form.get('_method', 'POST')
     if method == 'DELETE':
         unlink(path.join(basedir, documentsdir, secure_filename(user), secure_filename(filename)))
-    return redirect("/admin/" + documentsdir + "/" + user)
+    return redirect("/admin/" + documentsdir + "/" + secure_filename(user))
 
 
 @app.route("/admin/" + publicdir + "/<path:filename>", methods=["POST"])
@@ -253,6 +260,14 @@ def make_dir(dir_name):
         mkdir(dir_name)
         chmod(dir_name, 0o700)
 
+@babel.localeselector
+def get_locale():
+    if not g.get('lang_code', None):
+        g.lang_code = request.accept_languages.best_match(app.config['LANGUAGES'])
+    return g.lang_code
+        
+
+# Main program
 
 umask(0o177)
         

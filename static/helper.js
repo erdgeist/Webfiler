@@ -31,8 +31,4 @@ window.onload = function() {
     for (let b of document.getElementsByName("edit")) {
 	b.onclick = function() { document.getElementById('user').value = b.value };
     }
-    
-    for (let f of document.getElementsByName("del-confirm")) {
-	f.onsubmit = function() { return confirm('Sind Sie sicher?'); };
-    }
 };

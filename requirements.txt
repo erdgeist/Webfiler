@@ -7,3 +7,4 @@ Werkzeug
 flask-wtf
 python-gnupg
 -e git+git://github.com/greyli/flask-dropzone.git#egg=Flask-Dropzone
+flask-babel

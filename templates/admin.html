@@ -1,33 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Filer Admin</title>
+<title>{{title}}</title>
 <meta charset="UTF-8">
 {{ dropzone.load_css() }}
 <link rel="stylesheet" href="/static/style.css">
 {{ dropzone.load_js() }}
 <script src="/static/helper.js"></script>
+<script nonce="{{nonce}}">
+  {# The confirmation JavaScript code is here to ensure, that the code is present, when browser loads the page. #}
+  window.onload = function() {
+      for (let f of document.getElementsByName("del-confirm")) {
+	  f.onsubmit = function() { return confirm('{{_("Sind Sie sicher?")}}'); };
+      }
+  };  
+</script>
 </head>
 <body>
-<h1>{{organization}} – Administration</h1>
-<h2>Mandanten</h2>
+<h1>{{organization}} – {{_("Administration")}}</h1>
+<h2>{{_("Mandanten")}}</h2>
 <ul>
 {%- for item in users %}
   <li><form action="/admin/del-user/{{item}}" name="del-confirm" method="post">
       <input type="hidden" name="_method" value="DELETE">
-      <button class="delete">löschen</button>
+      <button class="delete">{{_("Löschen")}}</button>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/></form>
     <button class="edit" name="edit" value="{{item}}">edit</button>
-    <a href="/admin/{{documentsdir}}/{{item}}">{{item}}</a> <small>Mandanten-URL: {{url_root}}{{documentsdir}}/{{item}}</small>
+    <a href="/admin/{{documentsdir}}/{{item}}">{{item}}</a> <small>{{_("Mandanten-URL")}}: {{url_root}}{{documentsdir}}/{{item}}</small>
   </li>
 {%- endfor %}
 <li>
   <form action="/admin/new-user" method="post">
     <input id="user" name="user" type="text" placeholder="Name" required></input>
     <input id="password" name="password" type="text" placeholder="Passwort" autocomplete="off" required></input>
-    <button class="add" id="generatePassword" type="button">Generieren</button>
-    <button class="add" id="copyPassword" type="button">Kopieren</button>
-    <button class="add">Hinzufügen</button>
+    <button class="add" id="generatePassword" type="button">{{_("Generieren")}}</button>
+    <button class="add" id="copyPassword" type="button">{{_("Kopieren")}}</button>
+    <button class="add">{{_("Hinzufügen")}}</button>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   </form>
 </li>
@@ -35,13 +43,13 @@
 
 {%- if support_public_docs %}
 
-<h2>Öffentliche Dokumente</h2>
+<h2>{{_("Öffentliche Dokumente")}}</h2>
 <ul>
 {%- for item in tree.children recursive %}
 <li>
   <form action="/admin/{{ item.name }}" method="post" name="del-confirm">
     <input type="hidden" name="_method" value="DELETE">
-    <button class="delete">löschen</button>
+    <button class="delete">{{_("Löschen")}}</button>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   </form>
   <a href="{{ item.name }}" download="{{item.download}}">{{ item.download }}</a>
@@ -51,7 +59,7 @@
 {%- endfor %}
 </ul>
 
-<h2>Öffentliches Dokument hochladen</h2>
+<h2>{{_("Öffentliches Dokument hochladen")}}</h2>
 <div class="droppy">{{ dropzone.create(action='/admin') }}</div>
 
 {{ dropzone.config(nonce=nonce) }}

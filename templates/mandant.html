@@ -1,28 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Filer</title>
+<title>{{title}}</title>
 <meta charset="UTF-8">
 {{ dropzone.load_css() }}
 <link rel="stylesheet" href="/static/style.css">
 {{ dropzone.load_js() }}
 <script src="/static/helper.js"></script>
+<script nonce="{{nonce}}">
+  {# The confirmation JavaScript code is here to ensure, that the code is present, when browser loads the page. #}
+  window.onload = function() {
+      for (let f of document.getElementsByName("del-confirm")) {
+	  f.onsubmit = function() { return confirm('{{_("Sind Sie sicher?")}}'); };
+      }
+  };  
+</script>
 </head>
 <body>
-<h1>{{organization}} – Dokumenten-Austausch</h1>
+<h1>{{organization}} – {{_("Dokumenten-Austausch")}}</h1>
 {%- if admin %}
-<a href="/admin">Zurück zur Übersicht</a>
+<a href="/admin">{{_("Zurück zur Übersicht")}}</a>
 {% endif -%}
-<h2>Dokumente</h2>
+<h2>{{_("Dokumente")}}</h2>
 <ul>
 {%- for item in tree.children recursive %}
 <li>
   <form action="/{{admin}}{{ item.name }}" method="post" name="del-confirm">
     <input type="hidden" name="_method" value="DELETE">
-    <button class="delete" type="submit">löschen</button>
+    <button class="delete" type="submit">{{_("Löschen")}}</button>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   </form>
-  <div class="age">{{item.ttl}} Tag{%- if not item.ttl == 1 -%}e{%- endif -%}</div>
+  <div class="age">{{item.ttl}}&nbsp;{%- if not item.ttl == 1 -%} {{_("Tage")}} {%- else -%} {{_("Tag")}} {%- endif -%}</div>
   {%- if 'children' in item -%}
   {{item.download}}<br/>
   <ul>{{ loop(item.children) }}</ul>
