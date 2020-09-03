@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-09-03 17:48+0200\n"
+"POT-Creation-Date: 2020-09-03 21:02+0200\n"
 "PO-Revision-Date: 2020-09-03 17:48+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -41,6 +41,10 @@ msgstr "Mandanten"
 #: templates/admin.html:26 templates/admin.html:52 templates/mandant.html:30
 msgid "Löschen"
 msgstr "Löschen"
+
+#: templates/admin.html:28
+msgid "Editieren"
+msgstr "Editieren"
 
 #: templates/admin.html:29
 msgid "Mandanten-URL"
@@ -82,6 +86,7 @@ msgstr "Dokumente"
 msgid "Tage"
 msgstr "Tage"
 
+#: templates/mandant.html:33
 msgid "Tag"
 msgstr "Tag"
 
