@@ -36,6 +36,7 @@ app.config["DROPZONE_ALLOWED_FILE_CUSTOM"] = True
 app.config["DROPZONE_ALLOWED_FILE_TYPE"] = ""
 app.config["DROPZONE_SERVE_LOCAL"] = True
 app.config["DROPZONE_ENABLE_CSRF"] = True
+app.config["DROPZONE_TIMEOUT"] = 600000
 app.config["WTF_CSRF_SSL_STRICT"] = False # Disable looking at referrer
 
 app.config["SESSION_COOKIE_SECURE"] = True
